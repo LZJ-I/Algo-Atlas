@@ -2,7 +2,9 @@
 
 > **Re:Algo** — 从零开始的算法学习之路
 
-个人 LeetCode 刷题记录和算法题解库，记录学习过程中的思考、笔记和代码实现。
+<p align="center">
+  <img src="algo-atlas-banner.svg" alt="Algo-Atlas Banner" width="100%">
+</p>
 
 ## 📚 项目介绍
 
