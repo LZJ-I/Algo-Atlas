@@ -25,7 +25,7 @@ cd Algo-Atlas
 
 ### 环境配置
 
-所谓“工欲善其事，必先利其器”，配置好环境可以让坐在电脑前刷题变的更加快乐：[配套 vscode/cursor 刷题插件](https://labuladong.online/zh/algo/intro/vscode/)(这里我用的不是官方的leetcode插件，因为他的登录经常有问题)
+所谓“工欲善其事，必先利其器”，配置好环境可以让坐在电脑前刷题变的更加快乐：[vscode/cursor 刷题插件](https://labuladong.online/zh/algo/intro/vscode/)(这里我用的不是官方的LeetCode插件，因为他的登录经常有问题。)
 题单：[分享｜如何科学刷题？](https://leetcode.cn/discuss/post/3141566/ru-he-ke-xue-shua-ti-by-endlesscheng-q3yd/)(可以参考，但还是要按自己的实际情况来)
 
 ### 推荐工具
