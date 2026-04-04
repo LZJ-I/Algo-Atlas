@@ -3,7 +3,7 @@
 > **Re:Algo** — 从零开始的算法学习之路
 
 <p align="center">
-  <img src="algo-atlas-banner.svg" alt="Algo-Atlas Banner" width="100%">
+  <img src="assets/algo-atlas-banner.svg" alt="Algo-Atlas Banner" width="100%">
 </p>
 
 ## 📚 项目介绍
