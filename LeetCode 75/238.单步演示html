@@ -1,0 +1,519 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeetCode 238 单步动画演示</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+    .cell {
+      transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+    }
+    .cell.active {
+      animation: pop 0.45s ease;
+    }
+    .code-line {
+      transition: all 0.2s ease;
+    }
+    .code-line.active {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-left: 4px solid #2563eb;
+      padding-left: 12px;
+    }
+    .soft-card {
+      box-shadow: 0 10px 30px rgba(30, 41, 59, 0.08);
+    }
+    @keyframes pop {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800">
+  <div class="max-w-7xl mx-auto px-4 py-6 md:px-6 md:py-8">
+    <div class="mb-6">
+      <h1 class="text-3xl md:text-4xl font-bold text-slate-900">LeetCode 238：除了自身以外数组的乘积</h1>
+      <p class="mt-2 text-slate-600">
+        这个页面专门用来<strong>单步执行</strong>你的算法：先看<strong>前缀乘积</strong>如何写入 <code>result</code>，再看 <code>rightProduct</code> 如何从右往左补上<strong>后缀乘积</strong>。
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div class="xl:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl p-5 soft-card">
+          <div class="flex flex-col gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">输入数组（逗号分隔）</label>
+              <div class="flex flex-col md:flex-row gap-3">
+                <input id="numsInput" class="flex-1 rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-400" value="1,2,3,4" />
+                <button id="applyBtn" class="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 font-medium">载入数组</button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+              <button class="example-btn rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-sm font-medium" data-value="1,2,3,4">示例 1：1,2,3,4</button>
+              <button class="example-btn rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-sm font-medium" data-value="-1,1,0,-3,3">示例 2：-1,1,0,-3,3</button>
+              <button class="example-btn rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-sm font-medium" data-value="2,3,4,5">示例 3：2,3,4,5</button>
+            </div>
+
+            <div class="border-t pt-4">
+              <div class="flex flex-wrap gap-3">
+                <button id="prevBtn" class="rounded-xl bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 font-medium">上一步</button>
+                <button id="nextBtn" class="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 font-medium">下一步</button>
+                <button id="autoBtn" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 font-medium">自动播放</button>
+                <button id="resetBtn" class="rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 font-medium">重置</button>
+              </div>
+
+              <div class="mt-4">
+                <div class="flex items-center justify-between text-sm text-slate-600 mb-2">
+                  <span id="stepLabel">步骤 1 / 1</span>
+                  <span id="phaseLabel">阶段：初始化</span>
+                </div>
+                <input id="progressRange" type="range" min="0" max="0" value="0" class="w-full accent-blue-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 soft-card">
+          <h2 class="text-xl font-bold mb-4">数组状态动画</h2>
+
+          <div class="space-y-5">
+            <div>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="inline-flex items-center rounded-full bg-indigo-100 text-indigo-700 px-3 py-1 text-sm font-medium">原数组 nums</span>
+                <span class="text-sm text-slate-500">算法不会修改它</span>
+              </div>
+              <div id="numsRow" class="flex flex-wrap gap-3"></div>
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-sm font-medium">结果数组 result</span>
+                <span class="text-sm text-slate-500">第一趟先存左侧乘积，第二趟再乘上右侧乘积</span>
+              </div>
+              <div id="resultRow" class="flex flex-wrap gap-3"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white rounded-2xl p-5 soft-card">
+            <div class="text-sm text-slate-500 mb-1">当前下标 i</div>
+            <div id="currentIndex" class="text-3xl font-bold text-slate-900">-</div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 soft-card">
+            <div class="text-sm text-slate-500 mb-1">rightProduct</div>
+            <div id="rightProductValue" class="text-3xl font-bold text-emerald-700">-</div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 soft-card">
+            <div class="text-sm text-slate-500 mb-1">当前公式</div>
+            <div id="formulaText" class="text-lg font-semibold text-slate-900">-</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 soft-card">
+          <h2 class="text-xl font-bold mb-3">这一步发生了什么？</h2>
+          <div id="messageBox" class="text-slate-700 leading-7"></div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl p-5 soft-card">
+          <h2 class="text-xl font-bold mb-4">伪代码高亮</h2>
+          <div id="codeBox" class="bg-slate-50 rounded-xl p-4 text-sm leading-7 font-mono space-y-1">
+            <div class="code-line rounded-lg px-3 py-1" data-line="1">(1) result = [1, 1, ..., 1]</div>
+            <div class="code-line rounded-lg px-3 py-1" data-line="2">(2) for i = 1 到 n - 1</div>
+            <div class="code-line rounded-lg px-3 py-1" data-line="3">(3) &nbsp;&nbsp;&nbsp;&nbsp;result[i] = result[i - 1] * nums[i - 1]</div>
+            <div class="code-line rounded-lg px-3 py-1" data-line="4">(4) rightProduct = 1</div>
+            <div class="code-line rounded-lg px-3 py-1" data-line="5">(5) for i = n - 1 到 0</div>
+            <div class="code-line rounded-lg px-3 py-1" data-line="6">(6) &nbsp;&nbsp;&nbsp;&nbsp;result[i] = result[i] * rightProduct</div>
+            <div class="code-line rounded-lg px-3 py-1" data-line="7">(7) &nbsp;&nbsp;&nbsp;&nbsp;rightProduct = rightProduct * nums[i]</div>
+            <div class="code-line rounded-lg px-3 py-1" data-line="8">(8) return result</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 soft-card">
+          <h2 class="text-xl font-bold mb-3">核心理解</h2>
+          <div class="space-y-3 text-slate-700 leading-7 text-sm">
+            <p><strong>第一趟（从左到右）</strong>：<code>result[i]</code> 存的是 <strong>i 左边所有数的乘积</strong>。</p>
+            <p><strong>第二趟（从右到左）</strong>：用 <code>rightProduct</code> 维护 <strong>i 右边所有数的乘积</strong>。</p>
+            <p>所以最终：</p>
+            <p class="rounded-xl bg-blue-50 text-blue-800 px-3 py-3 font-medium">
+              result[i] = 左侧乘积 × 右侧乘积
+            </p>
+            <p>这样就得到了“除了自己以外”的全部乘积，而且没有用除法。</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 soft-card">
+          <h2 class="text-xl font-bold mb-3">你的代码复杂度</h2>
+          <div class="space-y-2 text-sm text-slate-700 leading-7">
+            <p><strong>时间复杂度：</strong> \( O(n) \)</p>
+            <p><strong>原因：</strong> 总共两次线性遍历，每次都只走一遍数组。</p>
+            <p><strong>额外空间复杂度：</strong> \( O(1) \)</p>
+            <p><strong>说明：</strong> 题目通常不把输出数组 <code>result</code> 算进额外空间里，所以这是 \( O(1) \)。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      nums: [1, 2, 3, 4],
+      snapshots: [],
+      step: 0,
+      timer: null
+    };
+
+    function parseNums(input) {
+      const parts = input
+        .split(/[\s,，]+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (parts.length === 0) {
+        throw new Error("请输入至少一个数字");
+      }
+
+      const nums = parts.map(v => Number(v));
+      if (nums.some(v => Number.isNaN(v))) {
+        throw new Error("输入里包含无法识别的数字");
+      }
+
+      if (nums.length < 2) {
+        throw new Error("至少需要 2 个数字");
+      }
+
+      if (nums.length > 10) {
+        throw new Error("为了动画效果更清楚，建议不超过 10 个数字");
+      }
+
+      return nums;
+    }
+
+    function clone(arr) {
+      return arr.slice();
+    }
+
+    function buildSnapshots(nums) {
+      const shots = [];
+      const result = new Array(nums.length).fill(1);
+
+      shots.push({
+        phase: "初始化",
+        codeLine: 1,
+        nums: clone(nums),
+        result: clone(result),
+        i: null,
+        rightProduct: null,
+        formula: "result 全部初始化为 1",
+        message: "先创建结果数组 result，并把每个位置都设成 1。这样后面乘前缀、乘后缀都会比较自然。",
+        highlightNums: [],
+        highlightResult: []
+      });
+
+      shots.push({
+        phase: "前缀乘积",
+        codeLine: 2,
+        nums: clone(nums),
+        result: clone(result),
+        i: 1,
+        rightProduct: null,
+        formula: "开始从左往右扫描",
+        message: "第一趟开始：从左到右。此时我们要让 result[i] 存下标 i 左边所有元素的乘积。",
+        highlightNums: [],
+        highlightResult: []
+      });
+
+      for (let i = 1; i < nums.length; i++) {
+        const left = result[i - 1];
+        const currentLeftNum = nums[i - 1];
+        result[i] = left * currentLeftNum;
+
+        shots.push({
+          phase: "前缀乘积",
+          codeLine: 3,
+          nums: clone(nums),
+          result: clone(result),
+          i,
+          rightProduct: null,
+          formula: `result[${i}] = result[${i - 1}] × nums[${i - 1}] = ${left} × ${currentLeftNum} = ${result[i]}`,
+          message: `现在处理 i = ${i}。把“前一个位置已经算好的左侧乘积”继续乘上 nums[${i - 1}]，于是 result[${i}] 就变成了位置 ${i} 左边所有数的乘积。`,
+          highlightNums: [i - 1],
+          highlightResult: [i, i - 1]
+        });
+      }
+
+      shots.push({
+        phase: "后缀乘积",
+        codeLine: 4,
+        nums: clone(nums),
+        result: clone(result),
+        i: nums.length - 1,
+        rightProduct: 1,
+        formula: "rightProduct = 1",
+        message: "第二趟开始：从右到左。先令 rightProduct = 1。它表示“当前下标右边所有数的乘积”。刚开始最右侧右边没有数，所以是 1。",
+        highlightNums: [],
+        highlightResult: []
+      });
+
+      shots.push({
+        phase: "后缀乘积",
+        codeLine: 5,
+        nums: clone(nums),
+        result: clone(result),
+        i: nums.length - 1,
+        rightProduct: 1,
+        formula: "从右往左扫描",
+        message: "接下来每一轮会做两件事：先把 rightProduct 乘到 result[i] 上，再把 nums[i] 累乘进 rightProduct。",
+        highlightNums: [],
+        highlightResult: []
+      });
+
+      let rightProduct = 1;
+      for (let i = nums.length - 1; i >= 0; i--) {
+        const before = result[i];
+        const usedRight = rightProduct;
+        result[i] = result[i] * rightProduct;
+
+        shots.push({
+          phase: "后缀乘积",
+          codeLine: 6,
+          nums: clone(nums),
+          result: clone(result),
+          i,
+          rightProduct: usedRight,
+          formula: `result[${i}] = ${before} × ${usedRight} = ${result[i]}`,
+          message: `先更新 result[${i}]。这里的 ${before} 是“左侧乘积”，${usedRight} 是“右侧乘积”，两者一乘，就正好得到“除了 nums[${i}] 自己以外的所有元素乘积”。`,
+          highlightNums: [],
+          highlightResult: [i]
+        });
+
+        const oldRight = rightProduct;
+        rightProduct = rightProduct * nums[i];
+
+        shots.push({
+          phase: "后缀乘积",
+          codeLine: 7,
+          nums: clone(nums),
+          result: clone(result),
+          i,
+          rightProduct: rightProduct,
+          formula: `rightProduct = ${oldRight} × nums[${i}](${nums[i]}) = ${rightProduct}`,
+          message: `再更新 rightProduct。这样当指针继续往左走时，rightProduct 就会表示“新位置右边所有数的乘积”。`,
+          highlightNums: [i],
+          highlightResult: [i]
+        });
+      }
+
+      shots.push({
+        phase: "完成",
+        codeLine: 8,
+        nums: clone(nums),
+        result: clone(result),
+        i: null,
+        rightProduct,
+        formula: `最终答案：${JSON.stringify(result)}`,
+        message: "所有步骤完成。现在 result 的每个位置都已经是“除了自身以外数组的乘积”。",
+        highlightNums: [],
+        highlightResult: result.map((_, idx) => idx)
+      });
+
+      return shots;
+    }
+
+    function createCell(value, index, active, colorClass) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "flex flex-col items-center gap-1";
+
+      const indexTag = document.createElement("div");
+      indexTag.className = "text-xs text-slate-500";
+      indexTag.textContent = `index ${index}`;
+
+      const cell = document.createElement("div");
+      cell.className = `cell w-16 h-16 rounded-2xl border flex items-center justify-center font-bold text-lg shadow-sm ${colorClass} ${active ? "active ring-4 ring-offset-2 ring-blue-300" : ""}`;
+      cell.textContent = value;
+
+      wrapper.appendChild(indexTag);
+      wrapper.appendChild(cell);
+      return wrapper;
+    }
+
+    function renderArray(containerId, arr, activeIndices, colorClass) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+      arr.forEach((v, idx) => {
+        const active = activeIndices.includes(idx);
+        container.appendChild(createCell(v, idx, active, colorClass));
+      });
+    }
+
+    function highlightCode(line) {
+      document.querySelectorAll(".code-line").forEach(el => {
+        const num = Number(el.dataset.line);
+        if (num === line) {
+          el.classList.add("active");
+        } else {
+          el.classList.remove("active");
+        }
+      });
+    }
+
+    function render() {
+      const shot = state.snapshots[state.step];
+      if (!shot) return;
+
+      renderArray("numsRow", shot.nums, shot.highlightNums, "bg-indigo-50 border-indigo-200 text-indigo-700");
+      renderArray("resultRow", shot.result, shot.highlightResult, "bg-blue-50 border-blue-200 text-blue-700");
+
+      document.getElementById("stepLabel").textContent = `步骤 ${state.step + 1} / ${state.snapshots.length}`;
+      document.getElementById("phaseLabel").textContent = `阶段：${shot.phase}`;
+      document.getElementById("currentIndex").textContent = shot.i === null ? "-" : shot.i;
+      document.getElementById("rightProductValue").textContent = shot.rightProduct === null ? "-" : shot.rightProduct;
+      document.getElementById("formulaText").textContent = shot.formula || "-";
+      document.getElementById("messageBox").textContent = shot.message || "";
+      document.getElementById("progressRange").max = String(state.snapshots.length - 1);
+      document.getElementById("progressRange").value = String(state.step);
+
+      highlightCode(shot.codeLine);
+    }
+
+    function stopAuto() {
+      if (state.timer) {
+        clearInterval(state.timer);
+        state.timer = null;
+        document.getElementById("autoBtn").textContent = "自动播放";
+        document.getElementById("autoBtn").classList.remove("bg-rose-600", "hover:bg-rose-700");
+        document.getElementById("autoBtn").classList.add("bg-emerald-600", "hover:bg-emerald-700");
+      }
+    }
+
+    function nextStep() {
+      if (state.step < state.snapshots.length - 1) {
+        state.step++;
+        render();
+      } else {
+        stopAuto();
+      }
+    }
+
+    function prevStep() {
+      if (state.step > 0) {
+        state.step--;
+        render();
+      }
+    }
+
+    function resetToStart() {
+      stopAuto();
+      state.step = 0;
+      render();
+    }
+
+    function loadNums(nums) {
+      state.nums = nums;
+      state.snapshots = buildSnapshots(nums);
+      state.step = 0;
+      render();
+    }
+
+    function applyInput() {
+      try {
+        stopAuto();
+        const nums = parseNums(document.getElementById("numsInput").value);
+        loadNums(nums);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    document.getElementById("applyBtn").addEventListener("click", applyInput);
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      stopAuto();
+      nextStep();
+    });
+
+    document.getElementById("prevBtn").addEventListener("click", () => {
+      stopAuto();
+      prevStep();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", resetToStart);
+
+    document.getElementById("autoBtn").addEventListener("click", () => {
+      if (state.timer) {
+        stopAuto();
+        return;
+      }
+
+      document.getElementById("autoBtn").textContent = "暂停播放";
+      document.getElementById("autoBtn").classList.remove("bg-emerald-600", "hover:bg-emerald-700");
+      document.getElementById("autoBtn").classList.add("bg-rose-600", "hover:bg-rose-700");
+
+      state.timer = setInterval(() => {
+        if (state.step >= state.snapshots.length - 1) {
+          stopAuto();
+          return;
+        }
+        state.step++;
+        render();
+      }, 1400);
+    });
+
+    document.getElementById("progressRange").addEventListener("input", (e) => {
+      stopAuto();
+      state.step = Number(e.target.value);
+      render();
+    });
+
+    document.querySelectorAll(".example-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const value = btn.dataset.value;
+        document.getElementById("numsInput").value = value;
+        applyInput();
+      });
+    });
+
+    document.getElementById("numsInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        applyInput();
+      }
+    });
+
+    loadNums(state.nums);
+  </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
